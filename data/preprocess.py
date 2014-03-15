@@ -34,7 +34,15 @@ def get_pic(x1, x2):
                 pic[x+i, y] = 255
     return pic
 
-def optimal_line(lines, captcha):
+def optimal_result(captcha):
+    x1s = []
+    x2s = []
+    for i in range(0, 50):
+        if captcha[i, 0] > 0:
+            x1s.append(i)
+        if captcha[i, 99] > 0:
+            x2s.append(i)
+    lines = [(x1, x2) for x1 in x1s for x2 in x2s]
     min_area = 5250
     best_result = None
     for line in lines:
@@ -47,6 +55,7 @@ def optimal_line(lines, captcha):
     return best_result * 255
 
 def del_dot(captcha):
+    """invoke this after eliminating lines"""
     captcha = numpy.c_[numpy.zeros(len(captcha), dtype=int), captcha, numpy.zeros(len(captcha), dtype=int)]
     captcha = numpy.vstack((numpy.zeros(len(captcha[0]), dtype=int), captcha, numpy.zeros(len(captcha[0]), dtype=int)))
     for i in range(1, 49+2):
@@ -58,7 +67,7 @@ def del_dot(captcha):
 
 def split_pic(captcha):
     """
-    captcha should have been line-eliminated
+    captcha should have been line-eliminated and dot-elimated
     return 4 lenth-2 tuples to indicate y-coordinate 4 characters in captcha
     """
     intervals = []
@@ -72,7 +81,7 @@ def split_pic(captcha):
                 IN = False
         else:
             if not IN:
-                l = max(j-1, 0)
+                l = j
                 IN = True
     if IN:
         r = 105
@@ -119,12 +128,9 @@ def connectivity(captcha, y1, y2):
     return True
 
 def del_line(captcha, line_no=2):
-    x1s   = range(0, 49)
-    x2s   = range(0, 49)
-    lines = [(x1, x2) for x1 in x1s for x2 in x2s]
     result = captcha
     for i in range(line_no):
-        result = optimal_line(lines, result)
+        result = optimal_result(result)
     return del_dot(result)
 
 def to_flat(captcha):
