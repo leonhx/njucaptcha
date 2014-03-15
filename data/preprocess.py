@@ -34,15 +34,7 @@ def get_pic(x1, x2):
                 pic[x+i, y] = 255
     return pic
 
-def optimal_result(captcha):
-    x1s = []
-    x2s = []
-    for i in range(0, 50):
-        if captcha[i, 0] > 0:
-            x1s.append(i)
-        if captcha[i, 99] > 0:
-            x2s.append(i)
-    lines = [(x1, x2) for x1 in x1s for x2 in x2s]
+def optimal_result(captcha, lines):
     min_area = 5250
     best_result = None
     for line in lines:
@@ -52,6 +44,8 @@ def optimal_result(captcha):
         if t_area < min_area:
             min_area = t_area
             best_result = t
+    if best_result is None:
+        raise AssertionError()
     return best_result * 255
 
 def del_dot(captcha):
@@ -128,9 +122,17 @@ def connectivity(captcha, y1, y2):
     return True
 
 def del_line(captcha, line_no=2):
+    x1s = []
+    x2s = []
+    for i in range(0, 50):
+        if captcha[i, 0] > 0:
+            x1s.append(i)
+        if captcha[i, 99] > 0:
+            x2s.append(i)
+    lines = [(x1, x2) for x1 in x1s for x2 in x2s]
     result = captcha
     for i in range(line_no):
-        result = optimal_result(result)
+        result = optimal_result(result, lines)
     return del_dot(result)
 
 def to_flat(captcha):
@@ -150,20 +152,27 @@ def explorer():
 
 def proc_split(start, end, captchas):
     chars = []
-    for c in captchas:
+    for i, c in enumerate(captchas):
         e = del_line(c)
         partitions = split_pic(e)
         if len(partitions) == 4:
             for p in split_pic(e):
                 chars.append(to_flat(e[:, p[0]:p[1]]))
-    numpy.save('splitted_chars%d-%d.npy' % (start, end-1), numpy.array(chars))
+    chars = numpy.array(chars)
+    numpy.save('splitted_chars%d-%d' % (start, end), chars)
 
 if __name__ == '__main__':
     import pp
     ppservers = ()
     job_server = pp.Server(ppservers=ppservers)
     step = 100
-    inputs = [(i, i+step, captchas[i:(i+step)]) for i in range(0, 100, step)]
+    inputs = [(i, i+step, captchas[i:(i+step)]) for i in range(6100, 10000, step)]
     jobs = [job_server.submit(proc_split, inp, (del_line, del_dot, split_pic, to_flat, get_pic, optimal_result, combine_left, combine_right, connectivity,), ('numpy',)) for inp in inputs]
     _ = [job() for job in jobs]
-    job_server.print_stats()
+    # print chars
+    # import itertools
+    # chars = itertools.chain.from_iterable(chars)
+    # chars = list(chars)
+    # chars = numpy.array(chars)
+    # numpy.save('splitted_chars.npy', chars)
+    # job_server.print_stats()
