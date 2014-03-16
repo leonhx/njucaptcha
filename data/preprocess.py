@@ -160,19 +160,40 @@ def del_line(captcha, line_no=2):
         result = optimal_result(result, lines)
     return del_dot(result)
 
-def to_flat(captcha):
-    c = numpy.insert(numpy.reshape(captcha, (-1,)), 0, captcha.shape[0])
-    return numpy.insert(c, 1, captcha.shape[1])
+def regularize(captcha):
+    """regularize to 40*40"""
+    x, y = captcha.shape
+    if x > 40:
+        to_del = x - 40
+        del_u = to_del/2
+        del_l = to_del - del_u
+        captcha = captcha[del_u:(-del_l), :]
+    elif x < 40:
+        to_pad = 40 - x
+        pad_u = to_pad/2
+        pad_l = to_pad - pad_u
+        captcha = numpy.vstack((numpy.zeros((pad_u, y), dtype=int), captcha, numpy.zeros((pad_l, y), dtype=int)))
+    if y > 40:
+        to_del = y - 40
+        del_l = to_del/2
+        del_r = to_del - del_l
+        captcha = captcha[:, del_l:(-del_r)]
+    elif y < 40:
+        to_pad = 40 - y
+        pad_l = to_pad/2
+        pad_r = to_pad - pad_l
+        captcha = numpy.c_[numpy.zeros((40, pad_l), dtype=int), captcha, numpy.zeros((40, pad_r), dtype=int)]
+    return captcha
 
 def explorer():
     for c in range(0, len(captchas), 77):
         e = del_line(captchas[c])
         pl.figure(c)
         for i, p in enumerate(split_pic(e)):
-            pl.subplot(141+i)
+            pl.subplot(221+i)
             char = e[:, p[0]:p[1]]
             y1, y2 = split_y(char)
-            pl.imshow(char[y1:y2, :], cmap=pl.cm.Greys)
+            pl.imshow(regularize(char[y1:y2, :]), cmap=pl.cm.Greys)
         pl.show()
         if raw_input() == 'q':
             pl.close('all')
@@ -185,7 +206,7 @@ def proc_split(start, end, captchas):
         for p in split_pic(e):
             char = e[:, p[0]:p[1]]
             y1, y2 = split_y(char)
-            chars.append(to_flat(char[y1:y2, :]))
+            chars.append(numpy.reshape(regularize(char[y1:y2, :]), (-1,)))
     return chars
 
 if __name__ == '__main__':
@@ -194,8 +215,8 @@ if __name__ == '__main__':
     job_server = pp.Server(ppservers=ppservers)
     step = 100
     inputs = [(i, i+step, captchas[i:(i+step)]) for i in range(0, 10000, step)]
-    jobs = [job_server.submit(proc_split, inp, (del_line, del_dot, split_pic, to_flat, get_pic, optimal_result, combine_left, combine_right, connectivity, split_y,), ('numpy',)) for inp in inputs]
+    jobs = [job_server.submit(proc_split, inp, (del_line, del_dot, split_pic, get_pic, optimal_result, combine_left, combine_right, connectivity, split_y, regularize), ('numpy',)) for inp in inputs]
     import itertools
     chars = itertools.chain.from_iterable([job() for job in jobs])
-    numpy.save('splitted_chars', numpy.array(list(chars)))
+    numpy.save('clean_chars', numpy.array(list(chars)))
     job_server.print_stats()
