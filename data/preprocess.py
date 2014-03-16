@@ -120,6 +120,20 @@ def split_pic(captcha):
         intervals = intervals[:big_idx] + splitted + intervals[(big_idx+1):]
     return intervals
 
+def split_y(captcha):
+    """this should be invoked after `split_pic`"""
+    y_up = 0
+    y_down = 50
+    for i in range(len(captcha)):
+        if captcha[i, :].sum() >= 255*3:
+            y_up = i
+            break
+    for i in range(len(captcha)-1, 0, -1):
+        if captcha[i, :].sum() >= 255*3:
+            y_down = i+1
+            break
+    return y_up, y_down
+
 def combine_left(intervals, i):
     return intervals[:(i-1)] + [(intervals[i-1][0], intervals[i][1])] + intervals[(i+1):]
 
@@ -147,7 +161,8 @@ def del_line(captcha, line_no=2):
     return del_dot(result)
 
 def to_flat(captcha):
-    return numpy.insert(numpy.reshape(captcha, (-1,)), 0, captcha.shape[1])
+    c = numpy.insert(numpy.reshape(captcha, (-1,)), 0, captcha.shape[0])
+    return numpy.insert(c, 1, captcha.shape[1])
 
 def explorer():
     for c in range(0, len(captchas), 77):
@@ -155,7 +170,9 @@ def explorer():
         pl.figure(c)
         for i, p in enumerate(split_pic(e)):
             pl.subplot(141+i)
-            pl.imshow(e[:, p[0]:p[1]], cmap=pl.cm.Greys)
+            char = e[:, p[0]:p[1]]
+            y1, y2 = split_y(char)
+            pl.imshow(char[y1:y2, :], cmap=pl.cm.Greys)
         pl.show()
         if raw_input() == 'q':
             pl.close('all')
@@ -166,7 +183,9 @@ def proc_split(start, end, captchas):
     for i, c in enumerate(captchas):
         e = del_line(c)
         for p in split_pic(e):
-            chars.append(to_flat(e[:, p[0]:p[1]]))
+            char = e[:, p[0]:p[1]]
+            y1, y2 = split_y(char)
+            chars.append(to_flat(char[y1:y2, :]))
     return chars
 
 if __name__ == '__main__':
