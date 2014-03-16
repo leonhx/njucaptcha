@@ -107,6 +107,17 @@ def split_pic(captcha):
                     intervals = combine_right(intervals, min_i)
                 else:
                     intervals = combine_left(intervals, min_i)
+    if len(intervals) < 4:
+        in_len = numpy.array([inte[1]-inte[0] for inte in intervals])
+        big_idx = numpy.argmax(in_len)
+        biggest = intervals[big_idx]
+        big_len = biggest[1] - biggest[0]
+        split_no = 5 - len(intervals)
+        split_points = [biggest[0]+big_len*i/split_no for i in range(split_no+1)]
+        splitted = []
+        for i in range(len(split_points)-1):
+            splitted.append((split_points[i], split_points[i+1]))
+        intervals = intervals[:big_idx] + splitted + intervals[(big_idx+1):]
     return intervals
 
 def combine_left(intervals, i):
@@ -154,10 +165,8 @@ def proc_split(start, end, captchas):
     chars = []
     for i, c in enumerate(captchas):
         e = del_line(c)
-        partitions = split_pic(e)
-        if len(partitions) == 4:
-            for p in split_pic(e):
-                chars.append(to_flat(e[:, p[0]:p[1]]))
+        for p in split_pic(e):
+            chars.append(to_flat(e[:, p[0]:p[1]]))
     return chars
 
 if __name__ == '__main__':
