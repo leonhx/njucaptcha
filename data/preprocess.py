@@ -158,21 +158,16 @@ def proc_split(start, end, captchas):
         if len(partitions) == 4:
             for p in split_pic(e):
                 chars.append(to_flat(e[:, p[0]:p[1]]))
-    chars = numpy.array(chars)
-    numpy.save('splitted_chars%d-%d' % (start, end), chars)
+    return chars
 
 if __name__ == '__main__':
     import pp
     ppservers = ()
     job_server = pp.Server(ppservers=ppservers)
     step = 100
-    inputs = [(i, i+step, captchas[i:(i+step)]) for i in range(6100, 10000, step)]
+    inputs = [(i, i+step, captchas[i:(i+step)]) for i in range(0, 1000, step)]
     jobs = [job_server.submit(proc_split, inp, (del_line, del_dot, split_pic, to_flat, get_pic, optimal_result, combine_left, combine_right, connectivity,), ('numpy',)) for inp in inputs]
-    _ = [job() for job in jobs]
-    # print chars
-    # import itertools
-    # chars = itertools.chain.from_iterable(chars)
-    # chars = list(chars)
-    # chars = numpy.array(chars)
-    # numpy.save('splitted_chars.npy', chars)
-    # job_server.print_stats()
+    import itertools
+    chars = itertools.chain.from_iterable([job() for job in jobs])
+    numpy.save('splitted_chars', numpy.array(list(chars)))
+    job_server.print_stats()
