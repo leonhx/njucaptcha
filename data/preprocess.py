@@ -194,7 +194,7 @@ if __name__ == '__main__':
     job_server = pp.Server(ppservers=ppservers)
     step = 100
     inputs = [(i, i+step, captchas[i:(i+step)]) for i in range(0, 10000, step)]
-    jobs = [job_server.submit(proc_split, inp, (del_line, del_dot, split_pic, to_flat, get_pic, optimal_result, combine_left, combine_right, connectivity,), ('numpy',)) for inp in inputs]
+    jobs = [job_server.submit(proc_split, inp, (del_line, del_dot, split_pic, to_flat, get_pic, optimal_result, combine_left, combine_right, connectivity, split_y,), ('numpy',)) for inp in inputs]
     import itertools
     chars = itertools.chain.from_iterable([job() for job in jobs])
     numpy.save('splitted_chars', numpy.array(list(chars)))
