@@ -35,5 +35,3 @@ nosetests.xml
 .project
 .pydevproject
 
-# Numpy File
-*.npy
