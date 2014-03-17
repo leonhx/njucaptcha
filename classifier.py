@@ -9,7 +9,7 @@ X = train[:n_samples]
 X = (X[:, ::2, ::2] + X[:, 1::2, ::2] + X[:, ::2, 1::2] + X[:, 1::2, 1::2])/4
 X.shape = len(X), -1
 
-cl = KMeans(n_clusters=45)
+cl = KMeans(n_clusters=80)
 cl.fit(X)
 
 from sklearn.externals import joblib
