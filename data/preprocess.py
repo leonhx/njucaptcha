@@ -7,14 +7,6 @@ import pylab as pl
 WHITE = 0
 BLACK = 255
 
-captchas = numpy.load('raw_captchas.npy')
-
-captchas[captchas < 127] = 0
-captchas[captchas >= 127] = 255
-
-captchas.shape = len(captchas), 100, 210
-captchas = (captchas[:, ::2, ::2] + captchas[:, 1::2, ::2] + captchas[:, ::2, 1::2] + captchas[:, 1::2, 1::2]) / 4
-
 WIDTH = 3
 Y1 = 0
 Y2 = 99
@@ -210,6 +202,13 @@ def proc_split(start, end, captchas):
     return chars
 
 if __name__ == '__main__':
+    captchas = numpy.load('raw_captchas.npy')
+
+    captchas[captchas < 127] = 0
+    captchas[captchas >= 127] = 255
+
+    captchas.shape = len(captchas), 100, 210
+    captchas = (captchas[:, ::2, ::2] + captchas[:, 1::2, ::2] + captchas[:, ::2, 1::2] + captchas[:, 1::2, 1::2]) / 4
     import pp
     ppservers = ()
     job_server = pp.Server(ppservers=ppservers)
