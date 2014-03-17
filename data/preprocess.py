@@ -19,7 +19,7 @@ def get_pic(x1, x2):
     def f(y):
         return k * y + b
     pic = numpy.zeros((50, 105), dtype=int)
-    points = [(round(f(y)), y) for y in range(0, 99+1)]
+    points = [(int(round(f(y))), y) for y in range(0, 99+1)]
     for x, y in points:
         for i in range(0, 3):
             if 0 <= x+i <= 49:
