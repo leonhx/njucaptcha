@@ -1,6 +1,8 @@
 import numpy as np
 import pylab as pl
 
+import string
+
 train = np.load('data/clean_chars.npy')
 train.shape = -1, 40, 40
 n_samples = 40000
@@ -10,6 +12,8 @@ X.shape = len(X), -1
 
 from sklearn.externals import joblib
 cl = joblib.load('kmeans40k.pkl')
+
+label_map = {}
 
 for l in np.unique(cl.labels_):
     labeled = X[cl.labels_ == l]
@@ -21,11 +25,18 @@ for l in np.unique(cl.labels_):
             pl.close(1)
             break
         pl.close(1)
-    print('continue?[y/N]'),
+    print('So what is that? (`!` to quit)'),
     n = raw_input()
-    while not n or n not in 'NnYy':
-        print('continue?[y/N]'),
+    while not n or n not in (string.digits+string.ascii_letters+'!'):
+        print('So what is that? (`!` to quit)'),
         n = raw_input()
-    if n[0].lower() == 'n':
+    if n[0].lower() == '!':
         pl.close(1)
         break
+    else:
+        label_map[l] = n
+
+import pickle
+f = open('label.map', 'w')
+pickle.dump(label_map, f)
+f.close()
