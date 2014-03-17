@@ -14,6 +14,7 @@ Example
 =======
 
 ```python
+import urllib2
 import recognizer
 
 page = urllib2.urlopen('http://cer.nju.edu.cn/amserver/verify/image.jsp')
